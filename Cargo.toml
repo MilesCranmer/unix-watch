@@ -1,5 +1,5 @@
 [package]
-name = "watch"
+name = "unix-watch"
 version = "0.1.0"
 edition = "2021"
 description = "Simple rust implementation of the Unix watch command"
@@ -14,3 +14,7 @@ license = "Apache-2.0"
 chrono = "0.4"
 gethostname = "0.4"
 structopt = "0.3"
+
+[[bin]]
+name = "watch"
+path = "src/main.rs"
