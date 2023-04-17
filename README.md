@@ -1,7 +1,6 @@
 # unix-watch
 
 [![Crates.io](https://img.shields.io/crates/v/unix-watch.svg)](https://crates.io/crates/unix-watch)
-[![Docs.rs](https://docs.rs/unix-watch/badge.svg)](https://docs.rs/unix-watch)
 [![CI](https://github.com/MilesCranmer/unix-watch/workflows/CI/badge.svg)](https://github.com/MilesCranmer/unix-watch/actions)
 
 ## Installation
