@@ -8,7 +8,7 @@
 Install with:
 
 ```bash
-cargo install --git https://github.com/MilesCranmer/unix-watch
+cargo install unix-watch
 ```
 
 You can then execute the binary with:
