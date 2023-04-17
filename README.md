@@ -5,11 +5,22 @@
 
 ## Installation
 
-### Cargo
+Install with:
 
-* Install the rust toolchain in order to have cargo installed by following
-  [this](https://www.rust-lang.org/tools/install) guide.
-* run `cargo install unix-watch`
+```bash
+cargo install --git https://github.com/MilesCranmer/unix-watch
+```
+
+You can then execute the binary with:
+
+```bash
+watch [-n <seconds>] -- <command>
+```
+
+Note that unlike the `watch` command on Linux, you must separate
+CLI flags from the command with a `--`.
+Note also that only the `-n` flag is supported.
+ANSI color codes are forwarded automatically.
 
 ## License
 
