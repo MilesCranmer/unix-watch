@@ -61,7 +61,11 @@ fn main() {
             .fold(cmd.to_string(), |acc, arg| acc + " " + arg);
 
         // Print what command we are running:
-        println!("Hostname: {}  Time: {}", hostname, Local::now().format("%Y-%m-%d %H:%M:%S"));
+        println!(
+            "Hostname: {}  Time: {}",
+            hostname,
+            Local::now().format("%Y-%m-%d %H:%M:%S")
+        );
         println!("Every {}s: {}", opt.interval, cmd_with_args);
         println!();
 
