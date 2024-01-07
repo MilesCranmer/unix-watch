@@ -23,7 +23,7 @@ struct Opt {
         help = "Number of seconds between updates. Can be a floating point number, will be rounded to the nearest millisecond.",
         default_value = "1"
     )]
-    interval_ms: ParseResult,
+    interval: ParseResult,
 
     // Raw arguments
     #[structopt(
@@ -70,7 +70,7 @@ fn main() {
         .into_string()
         .unwrap_or_else(|_| "unknown".to_string());
 
-    let (duration, r#int): (Duration, String) = match opt.interval_ms  {
+    let (duration, r#int): (Duration, String) = match opt.interval  {
         Ok(millis) => (Duration::from_millis(millis), format!("{}ms", millis.to_string().as_str())),
         Err(e) => {
             eprintln!("Failed to parse interval: {:?}", e);
