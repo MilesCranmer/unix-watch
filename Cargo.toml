@@ -10,9 +10,6 @@ license = "Apache-2.0"
 authors = ["Miles Cranmer <miles.cranmer@gmail.com>", "David M. Golembiowski <dmgolembiowski@gmail.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[features]
-default = []
-time_travel = []
 
 [dependencies]
 chrono = "0.4"
