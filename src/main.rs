@@ -43,6 +43,9 @@ struct Opt {
     args: Vec<OsString>,
 }
 
+// Type which wraps the outcome of a programmatic parsing to
+// numerically convert a UTF-8 string into a floating point number of seconds
+// into a usable argument for [`Duration::from_millis`]()
 type ParseResult = Result<u64, OsString>;
 
 // This function provides a unified wrapper for generating a custom
