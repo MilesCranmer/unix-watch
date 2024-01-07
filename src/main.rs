@@ -70,16 +70,12 @@ fn main() {
         .into_string()
         .unwrap_or_else(|_| "unknown".to_string());
 
-    let (duration, r#int): (Duration, String) = if let Some(ms) = opt.sub_interval {
-        (
-            Duration::from_millis(ms),
-            format!("{}ms", ms.to_string().as_str()),
-        )
-    } else {
-        (
-            Duration::from_secs(opt.interval),
-            format!("{}s", opt.interval.to_string().as_str()),
-        )
+    let (duration, r#int): (Duration, String) = match opt.interval_ms  {
+        Ok(millis) => (Duration::from_millis(millis), format!("{}ms", millis.to_string().as_str())),
+        Err(e) => {
+            eprintln!("Failed to parse interval: {:?}", e);
+            std::process::exit(1);
+        }
     };
 
     loop {
