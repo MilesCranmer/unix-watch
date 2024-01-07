@@ -1,6 +1,7 @@
+#![allow(unused_features)]
 use chrono::Local;
 use gethostname::gethostname;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::os::unix::process::ExitStatusExt;
 use std::process::Command;
 use std::thread::sleep;
@@ -15,8 +16,21 @@ use structopt::StructOpt;
 )]
 struct Opt {
     // Interval between updates
-    #[structopt(short = "n", long = "interval", default_value = "1")]
+    #[structopt(
+        short = "n",
+        long = "interval",
+        help = "(natural) number of seconds",
+        default_value = "1"
+    )]
     interval: u64,
+
+    #[structopt(
+        short = "s",
+        long = "sub-interval",
+        parse(try_from_os_str = parse_time),
+        help = "sub-second interval: floating point decimal \nnumber of seconds (to nearest thousandth)"
+    )]
+    sub_interval: Option<u64>,
 
     // Raw arguments
     #[structopt(
@@ -27,6 +41,40 @@ struct Opt {
         help = "Command to run"
     )]
     args: Vec<OsString>,
+}
+
+// Type which wraps the outcome of a programmatic parsing to
+// numerically convert a UTF-8 string into a floating point number of seconds
+// into a usable argument for [`Duration::from_millis`]()
+type ParseResult = Result<u64, OsString>;
+
+// This function provides a unified wrapper for generating a custom
+// newtype over the unified [`Duration::from_secs`]() and [`Duration::from_millis`]()
+fn parse_time(ts: impl AsRef<OsStr>) -> ParseResult {
+    if let Some(it) = ts.as_ref().to_str() {
+        match it.parse::<f32>() {
+            Ok(ms) => {
+                if ms.is_sign_negative() {
+                    if cfg!(feature = "time_travel") {
+                        return ParseResult::Err(
+                            "`time-travel` feature not yet implemented".into(),
+                        );
+                    }
+                    return ParseResult::Err("`time_travel` feature not enabled. Did you enable `--features time_travel`?".into());
+                }
+                let sec = ms.floor() * 1_000_f32;
+                let rem = (ms.fract() * 1_000_f32).floor();
+                debug_assert!(rem < 1.0, "Parsing logic is flawed");
+                debug_assert!(sec.fract() == rem.fract());
+                let (sec, rem): (u64, u64) = (sec as u64, rem as u64);
+                let millis = sec + rem;
+                ParseResult::Ok(millis)
+            }
+            Err(e) => ParseResult::Err(format!("{e:?}").into()),
+        }
+    } else {
+        ParseResult::Err("Character set not supported".into())
+    }
 }
 
 fn main() {
@@ -40,7 +88,18 @@ fn main() {
     let hostname = gethostname()
         .into_string()
         .unwrap_or_else(|_| "unknown".to_string());
-    let duration = Duration::from_secs(opt.interval);
+
+    let (duration, r#int): (Duration, String) = if let Some(ms) = opt.sub_interval {
+        (
+            Duration::from_millis(ms),
+            format!("{}ms", ms.to_string().as_str()),
+        )
+    } else {
+        (
+            Duration::from_secs(opt.interval),
+            format!("{}s", opt.interval.to_string().as_str()),
+        )
+    };
 
     loop {
         let start_time = Instant::now();
@@ -66,7 +125,7 @@ fn main() {
             hostname,
             Local::now().format("%Y-%m-%d %H:%M:%S")
         );
-        println!("Every {}s: {}", opt.interval, cmd_with_args);
+        println!("Every {}: {}", &r#int, cmd_with_args);
         println!();
 
         // Print output:
