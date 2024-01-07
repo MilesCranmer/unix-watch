@@ -19,10 +19,11 @@ struct Opt {
     #[structopt(
         short = "n",
         long = "interval",
-        help = "Number of seconds between updates. Can be a floating point number.",
+        parse(from_os_str = parse_time_as_s_to_ms),
+        help = "Number of seconds between updates. Can be a floating point number, will be rounded to the nearest millisecond.",
         default_value = "1"
     )]
-    interval: u64,
+    interval_ms: ParseResult,
 
     // Raw arguments
     #[structopt(
@@ -42,17 +43,12 @@ type ParseResult = Result<u64, OsString>;
 
 // This function provides a unified wrapper for generating a custom
 // newtype over the unified [`Duration::from_secs`]() and [`Duration::from_millis`]()
-fn parse_time(ts: impl AsRef<OsStr>) -> ParseResult {
+fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParseResult {
     if let Some(it) = ts.as_ref().to_str() {
-        match it.parse::<f32>() {
-            Ok(ms) => {
-                debug_assert!(ms >= 0.0, "Cannot check at negative intervals.");
-                let sec = ms.floor() * 1_000_f32;
-                let rem = (ms.fract() * 1_000_f32).floor();
-                debug_assert!(rem < 1.0, "Parsing logic is flawed");
-                debug_assert!(sec.fract() == rem.fract());
-                let (sec, rem): (u64, u64) = (sec as u64, rem as u64);
-                let millis = sec + rem;
+        match it.parse::<f64>() {
+            Ok(sec) => {
+                debug_assert!(sec >= 0.0, "Cannot check at negative intervals.");
+                let millis = (sec * 1_000.0).floor() as u64;
                 ParseResult::Ok(millis)
             }
             Err(e) => ParseResult::Err(format!("{e:?}").into()),
