@@ -46,14 +46,7 @@ fn parse_time(ts: impl AsRef<OsStr>) -> ParseResult {
     if let Some(it) = ts.as_ref().to_str() {
         match it.parse::<f32>() {
             Ok(ms) => {
-                if ms.is_sign_negative() {
-                    if cfg!(feature = "time_travel") {
-                        return ParseResult::Err(
-                            "`time-travel` feature not yet implemented".into(),
-                        );
-                    }
-                    return ParseResult::Err("`time_travel` feature not enabled. Did you enable `--features time_travel`?".into());
-                }
+                debug_assert!(ms >= 0.0, "Cannot check at negative intervals.");
                 let sec = ms.floor() * 1_000_f32;
                 let rem = (ms.fract() * 1_000_f32).floor();
                 debug_assert!(rem < 1.0, "Parsing logic is flawed");
