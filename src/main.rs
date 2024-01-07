@@ -42,7 +42,7 @@ fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParseResult {
     if let Some(it) = ts.as_ref().to_str() {
         match it.parse::<f64>() {
             Ok(sec) => {
-                debug_assert!(sec >= 0.0, "Cannot check at negative intervals.");
+                assert!(sec >= 0.0, "Cannot check at negative intervals.");
                 let millis = (sec * 1_000.0).floor() as u64;
                 ParseResult::Ok(millis)
             }
