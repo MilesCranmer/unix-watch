@@ -36,13 +36,8 @@ struct Opt {
     args: Vec<OsString>,
 }
 
-// Type which wraps the outcome of a programmatic parsing to
-// numerically convert a UTF-8 string into a floating point number of seconds
-// into a usable argument for [`Duration::from_millis`]()
 type ParseResult = Result<u64, OsString>;
 
-// This function provides a unified wrapper for generating a custom
-// newtype over the unified [`Duration::from_secs`]() and [`Duration::from_millis`]()
 fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParseResult {
     if let Some(it) = ts.as_ref().to_str() {
         match it.parse::<f64>() {
