@@ -61,6 +61,11 @@ fn main() {
         .map(|arg| arg.to_str().expect("Failed to parse command arguments"))
         .collect::<Vec<&str>>();
 
+    // Join cmd (str) and cmd_args (Vec<str>):
+    let display_cmd_with_args = cmd_args
+        .iter()
+        .fold(cmd.to_string(), |acc, arg| acc + " " + arg);
+
     let hostname = gethostname()
         .into_string()
         .unwrap_or_else(|_| "unknown".to_string());
@@ -89,18 +94,13 @@ fn main() {
         // Clear screen:
         print!("\x1B[2J\x1B[1;1H");
 
-        // Join cmd (str) and cmd_args (Vec<str>):
-        let cmd_with_args = cmd_args
-            .iter()
-            .fold(cmd.to_string(), |acc, arg| acc + " " + arg);
-
         // Print what command we are running:
         println!(
             "Hostname: {}  Time: {}",
             hostname,
             Local::now().format("%Y-%m-%d %H:%M:%S")
         );
-        println!("Every {}: {}", &r#int, cmd_with_args);
+        println!("Every {}: {}", &r#int, display_cmd_with_args);
         println!();
 
         // Print output:
