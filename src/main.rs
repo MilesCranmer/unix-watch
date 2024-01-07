@@ -11,7 +11,7 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(
     name = "watch",
-    about = "Execute a command at a regular interval, showing output fullscreen",
+    about = "Execute a command at a regular interval, showing the output fullscreen",
     usage = "watch [options] -- <command> [args...]"
 )]
 struct Opt {
@@ -19,18 +19,10 @@ struct Opt {
     #[structopt(
         short = "n",
         long = "interval",
-        help = "(natural) number of seconds",
+        help = "Number of seconds between updates. Can be a floating point number.",
         default_value = "1"
     )]
     interval: u64,
-
-    #[structopt(
-        short = "s",
-        long = "sub-interval",
-        parse(try_from_os_str = parse_time),
-        help = "sub-second interval: floating point decimal \nnumber of seconds (to nearest thousandth)"
-    )]
-    sub_interval: Option<u64>,
 
     // Raw arguments
     #[structopt(
