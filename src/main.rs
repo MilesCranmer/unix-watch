@@ -23,7 +23,7 @@ struct Opt {
         help = "Number of seconds between updates. Can be a floating point number, will be rounded to the nearest millisecond.",
         default_value = "1"
     )]
-    interval: ParseResult,
+    interval: ParsedMilliseconds,
 
     // Raw arguments
     #[structopt(
@@ -36,20 +36,20 @@ struct Opt {
     args: Vec<OsString>,
 }
 
-type ParseResult = Result<u64, OsString>;
+type ParsedMilliseconds = Result<u64, OsString>;
 
-fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParseResult {
+fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParsedMilliseconds {
     if let Some(it) = ts.as_ref().to_str() {
         match it.parse::<f64>() {
             Ok(sec) => {
                 assert!(sec >= 0.0, "Cannot check at negative intervals.");
                 let millis = (sec * 1_000.0).floor() as u64;
-                ParseResult::Ok(millis)
+                ParsedMilliseconds::Ok(millis)
             }
-            Err(e) => ParseResult::Err(format!("{e:?}").into()),
+            Err(e) => ParsedMilliseconds::Err(format!("{e:?}").into()),
         }
     } else {
-        ParseResult::Err("Character set not supported".into())
+        ParsedMilliseconds::Err("Character set not supported".into())
     }
 }
 
