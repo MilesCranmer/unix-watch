@@ -1,6 +1,7 @@
+#![allow(unused_features)]
 use chrono::Local;
 use gethostname::gethostname;
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::os::unix::process::ExitStatusExt;
 use std::process::Command;
 use std::thread::sleep;
@@ -10,13 +11,19 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(
     name = "watch",
-    about = "Execute a command at a regular interval, showing output fullscreen",
+    about = "Execute a command at a regular interval, showing the output fullscreen",
     usage = "watch [options] -- <command> [args...]"
 )]
 struct Opt {
     // Interval between updates
-    #[structopt(short = "n", long = "interval", default_value = "1")]
-    interval: u64,
+    #[structopt(
+        short = "n",
+        long = "interval",
+        parse(from_os_str = parse_time_as_s_to_ms),
+        help = "Number of seconds between updates. Can be a floating point number, will be rounded to the nearest millisecond.",
+        default_value = "1"
+    )]
+    interval: ParsedMilliseconds,
 
     // Raw arguments
     #[structopt(
@@ -29,6 +36,26 @@ struct Opt {
     args: Vec<OsString>,
 }
 
+type ParsedMilliseconds = Result<u64, OsString>;
+
+fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParsedMilliseconds {
+    if let Some(it) = ts.as_ref().to_str() {
+        match it.parse::<f64>() {
+            Ok(sec) => {
+                assert!(sec >= 0.0, "Cannot check at negative intervals.");
+                let millis = (sec * 1_000.0).floor() as u64;
+                ParsedMilliseconds::Ok(millis)
+            }
+            Err(e) => ParsedMilliseconds::Err(format!("{e:?}").into()),
+        }
+    } else {
+        ParsedMilliseconds::Err("Character set not supported".into())
+    }
+}
+
+const CLEAR_SCREEN: &str = "\x1B[2J";
+const MOVE_CURSOR_TO_TOP_LEFT: &str = "\x1B[1;1H";
+
 fn main() {
     let opt = Opt::from_args();
     let cmd = opt.args[0].to_str().expect("Failed to parse command");
@@ -37,10 +64,25 @@ fn main() {
         .map(|arg| arg.to_str().expect("Failed to parse command arguments"))
         .collect::<Vec<&str>>();
 
+    // Join cmd (str) and cmd_args (Vec<str>):
+    let display_cmd_with_args = cmd_args
+        .iter()
+        .fold(cmd.to_string(), |acc, arg| acc + " " + arg);
+
     let hostname = gethostname()
         .into_string()
         .unwrap_or_else(|_| "unknown".to_string());
-    let duration = Duration::from_secs(opt.interval);
+
+    let (duration, r#int): (Duration, String) = match opt.interval {
+        Ok(millis) => (
+            Duration::from_millis(millis),
+            format!("{}ms", millis.to_string().as_str()),
+        ),
+        Err(e) => {
+            eprintln!("Failed to parse interval: {:?}", e);
+            std::process::exit(1);
+        }
+    };
 
     loop {
         let start_time = Instant::now();
@@ -52,13 +94,7 @@ fn main() {
         let signal = output.status.stopped_signal();
         let return_code = output.status.code();
 
-        // Clear screen:
-        print!("\x1B[2J\x1B[1;1H");
-
-        // Join cmd (str) and cmd_args (Vec<str>):
-        let cmd_with_args = cmd_args
-            .iter()
-            .fold(cmd.to_string(), |acc, arg| acc + " " + arg);
+        print!("{}{}", CLEAR_SCREEN, MOVE_CURSOR_TO_TOP_LEFT);
 
         // Print what command we are running:
         println!(
@@ -66,7 +102,7 @@ fn main() {
             hostname,
             Local::now().format("%Y-%m-%d %H:%M:%S")
         );
-        println!("Every {}s: {}", opt.interval, cmd_with_args);
+        println!("Every {}: {}", &r#int, display_cmd_with_args);
         println!();
 
         // Print output:
