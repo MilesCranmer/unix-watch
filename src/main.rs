@@ -53,6 +53,9 @@ fn parse_time_as_s_to_ms(ts: impl AsRef<OsStr>) -> ParseResult {
     }
 }
 
+const CLEAR_SCREEN: &str = "\x1B[2J";
+const MOVE_CURSOR_TO_TOP_LEFT: &str = "\x1B[1;1H";
+
 fn main() {
     let opt = Opt::from_args();
     let cmd = opt.args[0].to_str().expect("Failed to parse command");
@@ -91,8 +94,7 @@ fn main() {
         let signal = output.status.stopped_signal();
         let return_code = output.status.code();
 
-        // Clear screen:
-        print!("\x1B[2J\x1B[1;1H");
+        print!("{}{}", CLEAR_SCREEN, MOVE_CURSOR_TO_TOP_LEFT);
 
         // Print what command we are running:
         println!(
