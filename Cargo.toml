@@ -12,7 +12,7 @@ license = "Apache-2.0"
 
 [dependencies]
 chrono = "0.4"
-gethostname = "0.4"
+gethostname = "0.5"
 structopt = "0.3"
 
 [[bin]]
